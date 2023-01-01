@@ -7,12 +7,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 
 import hometest.day22solo.models.RSVP;
 import hometest.day22solo.services.RSVPService;
@@ -142,7 +142,7 @@ public class RSVPRestController {
         }
 
 
-        //get method for total count
+        //GET COUNT METHOD 1 - correct way i guess
         @GetMapping(path = "/count")
         public ResponseEntity<String> countRSVP() {
             JsonObject resp;
@@ -160,7 +160,7 @@ public class RSVPRestController {
     
         }
 
-        //alternative method for getting total count -- fuck the row mapper.....
+        //GET COUNT METHOD 2 - the cheat way lol but easier
         @GetMapping(path = "/countalternative")
         public ResponseEntity<String> countRSVPAlternative(){
 
@@ -176,6 +176,64 @@ public class RSVPRestController {
                     .status(HttpStatus.CREATED)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(finalCount.toString());
+        }
+
+        //POST METHOD 1 - insert a row - if the email in the json body used to post already exist, update instead
+        @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<String> postRowInTable(@RequestBody String jsonBodyForPosting){
+
+            RSVP rsvp = null;
+            RSVP rsvpResult = null;
+            JsonObject resp;
+
+            try {
+                rsvp = RSVP.createStringJSONtoRsvp(jsonBodyForPosting);
+            } 
+            catch (Exception e) {
+                e.printStackTrace();
+                resp = Json.createObjectBuilder()
+                        .add("error", e.getMessage())
+                        .build();
+                    return ResponseEntity.badRequest().body(resp.toString());
+            }
+
+            //now take the created rsvp object and try to insert it into the table and store the it in rsvpResult as well
+            rsvpResult = rsvpSvc.insertRSVP(rsvp);
+
+            //create a new json object to use as the http response
+            resp = Json.createObjectBuilder()
+                    .add("rsvpRowID", rsvpResult.getId())
+                    .build();
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(resp.toString());
+        }
+
+        //POST METHOD 2 -- easy version done by myself
+        @PostMapping(path = "/nigelpost", consumes = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<String> easyPost(@RequestBody String jsonBodyString){
+
+            String response = "";
+
+            //try to update the post, if it doesnt work store the error message in the response
+            try {
+                boolean updatedStatus = rsvpSvc.easyPost(jsonBodyString);
+                response = String.valueOf(updatedStatus);    
+            } catch (Exception e) {
+                e.printStackTrace();
+                response = e.getMessage();
+                return ResponseEntity.badRequest().body(response);
+                
+            }
+            
+            JsonObject returnObject = Json.createObjectBuilder().add("responseToMe", response).build();
+
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .body(returnObject.toString());
         }
         
 }

@@ -32,4 +32,14 @@ public class RSVPService {
     public Integer getTotalRSVP() {
         return rsvpRepo.getTotalCount();
     }
+    
+    //POST METHOD 1 -- insert the row into the table
+    public RSVP insertRSVP(final RSVP rsvp){
+        return rsvpRepo.insertRSVP(rsvp);
+    }
+
+    //POST METHOD 2 -- my easy way -- insert a row into the rsvp table
+    public boolean easyPost(String jsonStringBody){
+        return rsvpRepo.insertRowEasy(jsonStringBody);
+    }
 }

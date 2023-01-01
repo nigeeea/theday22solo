@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.RowMapper;
 
 public class RSVPTotalCountMapper implements RowMapper<RSVP>{
 
+    //GET COUNT METHOD 1
     @Override
     public RSVP mapRow(ResultSet rs, int rowNum) throws SQLException {
         RSVP r = new RSVP();
